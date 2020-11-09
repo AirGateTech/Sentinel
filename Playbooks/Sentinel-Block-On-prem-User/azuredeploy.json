@@ -98,6 +98,13 @@
             "apiVersion": "2017-07-01",
             "name": "[parameters('workflows_Sentinel_BlockOnpremUser_name')]",
             "location": "canadacentral",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', 'azureloganalyticsdatacollector')]",
+                "[resourceId('Microsoft.Web/connections', 'azuresentinel')]",
+                "[resourceId('Microsoft.Web/connections', 'office365')]",
+                "[resourceId('Microsoft.Web/connections', 'azuread')]",
+                "[resourceId('Microsoft.Web/connections', 'azureautomation')]"
+            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
