@@ -73,6 +73,11 @@
             "apiVersion": "2017-07-01",
             "name": "[parameters('PlaybookName')]",
             "location": "[parameters('Location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', 'azureloganalyticsdatacollector')]",
+                "[resourceId('Microsoft.Web/connections', 'wdatp')]",
+                "[resourceId('Microsoft.Web/connections', 'office365')]"
+            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
