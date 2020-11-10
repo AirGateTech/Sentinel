@@ -170,7 +170,7 @@
                                         "body": {
                                             "Body": "<p>Hello SOC team,<br>\n<br>\nA machine has been isolated automatically by Azure Sentinel based on an threat raised by Microsoft Defedner for Servers.<br>\n<br>\nAlert Severity: @{body('Alerts_-_Get_single_alert')?['severity']}<br>\nMachine: @{body('Machines_-_Get_single_machine')?['computerDnsName']} <br>\nSentinel Incident: @{body('Alerts_-_Get_single_alert')?['incidentId']}<br>\nTitle: @{body('Alerts_-_Get_single_alert')?['title']}<br>\nDescription: @{body('Alerts_-_Get_single_alert')?['description']}</p>",
                                             "Subject": "[[[@{body('Alerts_-_Get_single_alert')?['severity']}] Machine @{body('Machines_-_Get_single_machine')?['computerDnsName']} isolated by Sentinel | Incident: @{body('Alerts_-_Get_single_alert')?['incidentId']}",
-                                            "To": "Email_To"
+                                            "To": "[parameters('Email_To')]"
                                         },
                                         "host": {
                                             "connection": {
