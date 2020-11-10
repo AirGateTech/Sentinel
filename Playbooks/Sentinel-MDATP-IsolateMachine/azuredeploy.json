@@ -21,10 +21,6 @@
         "Email_From": {
             "defaultValue": "user@domain.com",
             "type": "string"
-        },
-        "Location": {
-            "defaultValue": "Canada Central",
-            "type": "string"
         }
     },
     "variables": {},
@@ -72,7 +68,7 @@
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
             "name": "[parameters('PlaybookName')]",
-            "location": "[parameters('Location')]",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/connections', 'azureloganalyticsdatacollector')]",
                 "[resourceId('Microsoft.Web/connections', 'wdatp')]",
