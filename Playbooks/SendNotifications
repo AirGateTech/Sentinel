@@ -1,0 +1,360 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Append_to_string_variable_2": {
+                "inputs": {
+                    "name": "varHTMLTable",
+                    "value": "</table>"
+                },
+                "runAfter": {
+                    "For_each": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "AppendToStringVariable"
+            },
+            "Condition": {
+                "actions": {
+                    "Post_a_message_(V3)": {
+                        "inputs": {
+                            "body": {
+                                "body": {
+                                    "content": "<p>In the following is more information about the new Azure Sentinel incident:<br>\n@{variables('varHTMLTable')}<br>\n<br>\n*Note: Please review and let us know whether this incident is false positive.<br>\n<br>\nAzSec Team</p>",
+                                    "contentType": "html"
+                                }
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['teams_1']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v3/beta/teams/@{encodeURIComponent('cf731b7a-b5d7-4a10-9647-0abb33f67cca')}/channels/@{encodeURIComponent('19:3dc66ae192b843ebbded6ae59849a403@thread.skype')}/messages"
+                        },
+                        "runAfter": {
+                            "Send_an_email_(V2)_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Send_an_email_(V2)_2": {
+                        "inputs": {
+                            "body": {
+                                "Body": "<p><strong>In the following is more information about the new Azure Sentinel incident:</strong><br>\n@{variables('varHTMLTable')}<br>\n<br>\n*Note: Please review and let us know whether this incident is false positive.<br>\n<br>\nAzSec Team</p>",
+                                "From": "secalerts@infotech.com",
+                                "Subject": "[@{triggerBody()?['Severity']}] @{triggerBody()?['AlertDisplayName']} ",
+                                "To": "joseph.ghaly@airgate.ca"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "not": {
+                                "equals": [
+                                    "@length(body('Run_query_and_list_results')?['value'])",
+                                    0
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Append_to_string_variable_2": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "For_each": {
+                "actions": {
+                    "Append_to_string_variable": {
+                        "inputs": {
+                            "name": "varHTMLTable",
+                            "value": "<tr>\n     <td @{variables('varStyle').cellStyle}>@{items('For_each')?['IncidentNumber']}</td>\n     <td @{variables('varStyle').cellStyle}>@{items('For_each')?['CreatedTime']}</td>\n     <td @{variables('varSeverityColour')}>@{items('For_each')?['Severity']}</td>\n     <td @{variables('varStyle').cellStyle}>@{items('For_each')?['Title']}</td>\n     <td @{variables('varStyle').cellStyle}>@{items('For_each')?['Description']}</td>\n     <td @{variables('varStyle').cellStyle}><a href=\"@{items('For_each')?['IncidentUrl']}\">Incident in Azure Sentinal</a></td>\n</tr>"
+                        },
+                        "runAfter": {
+                            "Switch": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "AppendToStringVariable"
+                    },
+                    "Switch": {
+                        "cases": {
+                            "Case": {
+                                "actions": {
+                                    "Set_variable": {
+                                        "inputs": {
+                                            "name": "varSeverityColour",
+                                            "value": "@{variables('varStyle').rowStyleLowValues}"
+                                        },
+                                        "runAfter": {},
+                                        "type": "SetVariable"
+                                    }
+                                },
+                                "case": "Low"
+                            },
+                            "Case_2": {
+                                "actions": {
+                                    "Set_variable_2": {
+                                        "inputs": {
+                                            "name": "varSeverityColour",
+                                            "value": "@{variables('varStyle').rowStyleHighValues}"
+                                        },
+                                        "runAfter": {},
+                                        "type": "SetVariable"
+                                    }
+                                },
+                                "case": "High"
+                            },
+                            "Case_3": {
+                                "actions": {
+                                    "Set_variable_3": {
+                                        "inputs": {
+                                            "name": "varSeverityColour",
+                                            "value": "@{variables('varStyle').rowStyleInfoValues}"
+                                        },
+                                        "runAfter": {},
+                                        "type": "SetVariable"
+                                    }
+                                },
+                                "case": "Informational"
+                            },
+                            "Case_4": {
+                                "actions": {
+                                    "Set_variable_4": {
+                                        "inputs": {
+                                            "name": "varSeverityColour",
+                                            "value": "@{variables('varStyle').rowStyleMedValues}"
+                                        },
+                                        "runAfter": {},
+                                        "type": "SetVariable"
+                                    }
+                                },
+                                "case": "Medium"
+                            }
+                        },
+                        "default": {
+                            "actions": {}
+                        },
+                        "expression": "@items('For_each')?['Severity']",
+                        "runAfter": {},
+                        "type": "Switch"
+                    }
+                },
+                "foreach": "@body('Parse_JSON')?['value']",
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varStyle",
+                            "type": "object",
+                            "value": {
+                                "cellStyle": "style=\"font-family: Calibri; padding: 5px; border: 1px solid black;\"",
+                                "headerStyle": "style=\"font-family: Helvetica; padding: 5px; border: 1px solid black;\"",
+                                "numcellStyle": "style=\"font-family: Calibri; padding: 5px; border: 1px solid black;text-align: center;\"",
+                                "rowStyleHighValues": "style=\"font-size:110%;background-color:#b32400; padding: 5px; border: 1px solid black;text-align: center;\"",
+                                "rowStyleInfoValues": "style=\"background-color:#a6a6a6; padding: 5px; border: 1px solid black;text-align: center;\"",
+                                "rowStyleLowValues": "style=\"background-color:#ffcc00; padding: 5px; border: 1px solid black;text-align: center;\"",
+                                "rowStyleMedValues": "style=\"background-color:#ff6600; padding: 5px; border: 1px solid black;text-align: center;\"",
+                                "tableStyle": "style=\"border-collapse: collapse;\""
+                            }
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Until_2": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_2": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varHTMLTable",
+                            "type": "string",
+                            "value": "<table @{variables('varStyle').tableStyle}>\n   <tr>\n     <th @{variables('varStyle').headerStyle}>Incident Number</th>\n     <th @{variables('varStyle').headerStyle}>Created Time</th>\n     <th @{variables('varStyle').headerStyle}>Severity</th>\n     <th @{variables('varStyle').headerStyle}>Title</th>\n     <th @{variables('varStyle').headerStyle}>Description</th>\n     <th @{variables('varStyle').headerStyle}>Incident URL</th>\n   </tr>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_3": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varSeverityColour",
+                            "type": "string",
+                            "value": "@{variables('varStyle').rowStyleHighValues}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_2": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Parse_JSON": {
+                "inputs": {
+                    "content": "@body('Run_query_and_list_results')",
+                    "schema": {
+                        "properties": {
+                            "value": {
+                                "items": {
+                                    "properties": {
+                                        "CreatedTime": {
+                                            "type": "string"
+                                        },
+                                        "Description": {
+                                            "type": "string"
+                                        },
+                                        "IncidentNumber": {
+                                            "type": "integer"
+                                        },
+                                        "IncidentUrl": {
+                                            "type": "string"
+                                        },
+                                        "Severity": {
+                                            "type": "string"
+                                        },
+                                        "Title": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "IncidentNumber",
+                                        "CreatedTime",
+                                        "Severity",
+                                        "Title",
+                                        "Description",
+                                        "IncidentUrl"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable_3": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "Until_2": {
+                "actions": {
+                    "Run_query_and_list_results": {
+                        "inputs": {
+                            "body": "SecurityIncident\n| where AlertIds contains \"@{triggerBody()?['SystemAlertId']}\"\n| project IncidentNumber, CreatedTime,Severity, Title, Description, IncidentUrl\n| distinct *",
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/queryData",
+                            "queries": {
+                                "resourcegroups": "RG-LogAnalytics",
+                                "resourcename": "ITRG-Workspace",
+                                "resourcetype": "Log Analytics Workspace",
+                                "subscriptions": "df20a70a-e7db-438e-bdfe-2e84808af512",
+                                "timerange": "24h"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "expression": "@not(equals(length(body('Run_query_and_list_results')?['value']), 0))",
+                "limit": {
+                    "count": 500,
+                    "timeout": "PT1H"
+                },
+                "runAfter": {},
+                "type": "Until"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "When_a_response_to_an_Azure_Sentinel_alert_is_triggered": {
+                "inputs": {
+                    "body": {
+                        "callback_url": "@{listCallbackUrl()}"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                        }
+                    },
+                    "path": "/subscribe"
+                },
+                "type": "ApiConnectionWebhook"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuremonitorlogs": {
+                    "connectionId": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/resourceGroups/RG-LogAnalytics/providers/Microsoft.Web/connections/azuremonitorlogs-1",
+                    "connectionName": "azuremonitorlogs-1",
+                    "id": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/providers/Microsoft.Web/locations/canadacentral/managedApis/azuremonitorlogs"
+                },
+                "azuresentinel": {
+                    "connectionId": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/resourceGroups/RG-LogAnalytics/providers/Microsoft.Web/connections/azuresentinel-1",
+                    "connectionName": "azuresentinel-1",
+                    "id": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/providers/Microsoft.Web/locations/canadacentral/managedApis/azuresentinel"
+                },
+                "office365": {
+                    "connectionId": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/resourceGroups/RG-LogAnalytics/providers/Microsoft.Web/connections/office365-1",
+                    "connectionName": "office365-1",
+                    "id": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/providers/Microsoft.Web/locations/canadacentral/managedApis/office365"
+                },
+                "teams_1": {
+                    "connectionId": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/resourceGroups/RG-LogAnalytics/providers/Microsoft.Web/connections/teams-2",
+                    "connectionName": "teams-2",
+                    "id": "/subscriptions/df20a70a-e7db-438e-bdfe-2e84808af512/providers/Microsoft.Web/locations/canadacentral/managedApis/teams"
+                }
+            }
+        }
+    }
+}
